@@ -410,11 +410,11 @@ final class BLEService: NSObject {
     }
     
     // Ensure this runs on message queue to avoid main thread blocking
-    func sendMessage(_ content: String, mentions: [String] = [], to recipientID: PeerID? = nil, messageID: String? = nil, timestamp: Date? = nil) {
+    func sendMessage(_ content: String, mentions: [String] = [], to recipientID: PeerID? = nil, messageID: String? = nil, timestamp: Date? = nil, isEmergency: Bool = false) {
         // Call directly if already on messageQueue, otherwise dispatch
         if DispatchQueue.getSpecific(key: messageQueueKey) == nil {
             messageQueue.async { [weak self] in
-                self?.sendMessage(content, mentions: mentions, to: recipientID, messageID: messageID, timestamp: timestamp)
+                self?.sendMessage(content, mentions: mentions, to: recipientID, messageID: messageID, timestamp: timestamp, isEmergency: isEmergency)
             }
             return
         }
@@ -429,12 +429,13 @@ final class BLEService: NSObject {
             return
         }
         
-        // Public broadcast
+        // Public broadcast or emergency broadcast
         // Create packet with explicit fields so we can sign it
         let sendDate = timestamp ?? Date()
         let sendTimestampMs = UInt64(sendDate.timeIntervalSince1970 * 1000)
+        let messageType = isEmergency ? MessageType.emergencyMessage.rawValue : MessageType.message.rawValue
         let basePacket = BitchatPacket(
-            type: MessageType.message.rawValue,
+            type: messageType,
             senderID: Data(hexString: myPeerID.id) ?? Data(),
             recipientID: nil,
             timestamp: sendTimestampMs,
@@ -457,6 +458,10 @@ final class BLEService: NSObject {
         broadcastPacket(signedPacket)
         // Track our own broadcast for sync
         gossipSyncManager?.onPublicPacketSeen(signedPacket)
+    }
+
+    func sendEmergencyMessage(_ content: String, mentions: [String] = [], to recipientID: PeerID? = nil, messageID: String? = nil, timestamp: Date? = nil) {
+        sendMessage(content, mentions: mentions, to: recipientID, messageID: messageID, timestamp: timestamp, isEmergency: true)
     }
     
     // MARK: - Transport Protocol Conformance
@@ -888,7 +893,7 @@ final class BLEService: NSObject {
         switch MessageType(rawValue: type) {
         case .noiseEncrypted, .noiseHandshake:
             return true
-        case .none, .announce, .message, .leave, .requestSync, .fragment, .fileTransfer:
+        case .none, .announce, .message, .emergencyMessage, .leave, .requestSync, .fragment, .fileTransfer:
             return false
         }
     }
@@ -1039,13 +1044,14 @@ final class BLEService: NSObject {
         }
 
         // For broadcast (no directed peer) and non-fragment, choose a subset deterministically
-        // Special-case control/presence messages: do NOT subset to maximize immediate coverage
+        // Special-case control/presence (announce/requestSync/fragment) and emergency messages: do NOT subset
         var selectedPeripheralIDs = Set(allowedPeripheralIDs)
         var selectedCentralIDs = Set(allowedCentralIDs)
         if directedPeerHint == nil
             && packet.type != MessageType.fragment.rawValue
             && packet.type != MessageType.announce.rawValue
-            && packet.type != MessageType.requestSync.rawValue {
+            && packet.type != MessageType.requestSync.rawValue
+            && packet.type != MessageType.emergencyMessage.rawValue {
             let kp = subsetSizeForFanout(allowedPeripheralIDs.count)
             let kc = subsetSizeForFanout(allowedCentralIDs.count)
             selectedPeripheralIDs = selectDeterministicSubset(ids: allowedPeripheralIDs, k: kp, seed: messageID)
@@ -2999,6 +3005,8 @@ extension BLEService {
             return OutboundPriority.fragment(totalFragments: total)
         case .fileTransfer:
             return .fileTransfer
+        case .emergencyMessage:
+            return .high
         default:
             return .high
         }
@@ -3765,7 +3773,7 @@ extension BLEService {
         case .announce:
             handleAnnounce(packet, from: senderID)
             
-        case .message:
+        case .message, .emergencyMessage:
             handleMessage(packet, from: senderID)
             
         case .requestSync:
@@ -4100,7 +4108,7 @@ extension BLEService {
             guard let r = packet.recipientID else { return true }
             return r.count == 8 && r.allSatisfy { $0 == 0xFF }
         }()
-        if isBroadcastRecipient && packet.type == MessageType.message.rawValue {
+        if isBroadcastRecipient && (packet.type == MessageType.message.rawValue || packet.type == MessageType.emergencyMessage.rawValue) {
             gossipSyncManager?.onPublicPacketSeen(packet)
         }
 

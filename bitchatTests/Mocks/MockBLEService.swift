@@ -110,6 +110,10 @@ final class MockBLEService: NSObject {
     }
     
     func sendMessage(_ content: String, mentions: [String] = [], to recipientID: String? = nil, messageID: String? = nil, timestamp: Date? = nil) {
+        sendMessage(content, mentions: mentions, to: recipientID, messageID: messageID, timestamp: timestamp, isEmergency: false)
+    }
+
+    func sendMessage(_ content: String, mentions: [String] = [], to recipientID: String? = nil, messageID: String? = nil, timestamp: Date? = nil, isEmergency: Bool = false) {
         let message = BitchatMessage(
             id: messageID ?? UUID().uuidString,
             sender: myNickname,
@@ -124,8 +128,9 @@ final class MockBLEService: NSObject {
         )
         
         if let payload = message.toBinaryPayload() {
+            let packetType: UInt8 = isEmergency ? MessageType.emergencyMessage.rawValue : 0x01
             let packet = BitchatPacket(
-                type: 0x01,
+                type: packetType,
                 senderID: myPeerID.id.data(using: .utf8)!,
                 recipientID: recipientID?.data(using: .utf8),
                 timestamp: UInt64(Date().timeIntervalSince1970 * 1000),

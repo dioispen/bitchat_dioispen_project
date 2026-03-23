@@ -116,6 +116,23 @@ struct BLEServiceTests {
             try await sleep(1.0)
         }
     }
+
+    @Test func sendEmergencyMessageBroadcastsWithEmergencyType() async throws {
+        try await confirmation { receivedEmergencyMessage in
+            let delegate = MockBitchatDelegate { message in
+                #expect(message.content == "Emergency situation")
+                receivedEmergencyMessage()
+            }
+            service.delegate = delegate
+            service.sendMessage("Emergency situation", isEmergency: true)
+
+            // Allow async processing
+            try await sleep(1.0)
+        }
+
+        #expect(service.sentMessages.count == 1)
+        #expect(service.sentPackets.first?.type == MessageType.emergencyMessage.rawValue)
+    }
     
     // MARK: - Message Reception Tests
     
