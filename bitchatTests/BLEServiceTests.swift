@@ -293,6 +293,133 @@ struct BLEServiceTests {
             try await sleep(1.0)
         }
     }
+    
+    // MARK: - Emergency Message Relay Tests
+    
+    @Test func emergencyMessageIsAlwaysBroadcasted() async throws {
+        try await confirmation { receivedEmergency in
+            let peerID = PeerID(str: UUID().uuidString)
+            
+            let delegate = MockBitchatDelegate { message in
+                #expect(message.content == "ALERT: System emergency")
+                receivedEmergency()
+            }
+            service.delegate = delegate
+            
+            // Create and send emergency message
+            service.sendMessage("ALERT: System emergency", isEmergency: true)
+            
+            // Allow async processing
+            try await sleep(1.0)
+        }
+        
+        // Verify emergency packet has correct type
+        #expect(service.sentPackets.count >= 1)
+        let emergencyPacket = service.sentPackets.first { $0.type == MessageType.emergencyMessage.rawValue }
+        #expect(emergencyPacket != nil)
+    }
+    
+    @Test func emergencyMessageRelayHasMinimalDelay() {
+        // Test RelayController decision for emergency message
+        let decision = RelayController.decide(
+            ttl: 5,
+            senderIsSelf: false,
+            isEncrypted: false,
+            isDirectedEncrypted: false,
+            isFragment: false,
+            isDirectedFragment: false,
+            isHandshake: false,
+            isAnnounce: false,
+            isEmergency: true,  // Emergency flag set
+            degree: 3,
+            highDegreeThreshold: 8
+        )
+        
+        // Emergency messages should always relay with minimal delay
+        #expect(decision.shouldRelay == true)
+        #expect(decision.delayMs >= 5 && decision.delayMs <= 15)  // Minimal delay window
+        #expect(decision.newTTL == 4)  // TTL should decrement by 1
+    }
+    
+    @Test func emergencyMessageDecrementsTTL() {
+        // Test that emergency message TTL decrements correctly
+        let decision = RelayController.decide(
+            ttl: 6,
+            senderIsSelf: false,
+            isEncrypted: false,
+            isDirectedEncrypted: false,
+            isFragment: false,
+            isDirectedFragment: false,
+            isHandshake: false,
+            isAnnounce: false,
+            isEmergency: true,
+            degree: 5,
+            highDegreeThreshold: 8
+        )
+        
+        #expect(decision.shouldRelay == true)
+        #expect(decision.newTTL == 5)  // 6 - 1 = 5
+    }
+    
+    @Test func emergencyMessageRelayStopsAtTTLOne() {
+        // Test that emergency message with TTL <= 1 doesn't relay
+        let decision = RelayController.decide(
+            ttl: 1,
+            senderIsSelf: false,
+            isEncrypted: false,
+            isDirectedEncrypted: false,
+            isFragment: false,
+            isDirectedFragment: false,
+            isHandshake: false,
+            isAnnounce: false,
+            isEmergency: true,
+            degree: 3,
+            highDegreeThreshold: 8
+        )
+        
+        #expect(decision.shouldRelay == false)  // No relay with TTL <= 1
+    }
+    
+    @Test func emergencyMessageNotRelayedBySender() {
+        // Test that own emergency messages don't get relayed (senderIsSelf = true)
+        let decision = RelayController.decide(
+            ttl: 5,
+            senderIsSelf: true,  // Sender is self
+            isEncrypted: false,
+            isDirectedEncrypted: false,
+            isFragment: false,
+            isDirectedFragment: false,
+            isHandshake: false,
+            isAnnounce: false,
+            isEmergency: true,
+            degree: 3,
+            highDegreeThreshold: 8
+        )
+        
+        #expect(decision.shouldRelay == false)  // Don't relay own messages
+    }
+    
+    @Test func normalMessageRelayNotAffectedByEmergencyLogic() {
+        // Test that non-emergency messages still follow original relay rules
+        let normalDecision = RelayController.decide(
+            ttl: 6,
+            senderIsSelf: false,
+            isEncrypted: false,
+            isDirectedEncrypted: false,
+            isFragment: false,
+            isDirectedFragment: false,
+            isHandshake: false,
+            isAnnounce: false,
+            isEmergency: false,  // Normal message
+            degree: 3,
+            highDegreeThreshold: 8
+        )
+        
+        #expect(normalDecision.shouldRelay == true)
+        #expect(normalDecision.newTTL == 5)
+        // Normal messages should have longer delay than emergency
+        #expect(normalDecision.delayMs >= 60 && normalDecision.delayMs <= 150)
+    }
 }
 
 // MARK: - Mock Delegate Helper

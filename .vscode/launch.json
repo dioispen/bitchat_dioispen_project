@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:bitchat_dioispen_project}",
+            "name": "Debug bitchat",
+            "target": "bitchat",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug bitchat"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:bitchat_dioispen_project}",
+            "name": "Release bitchat",
+            "target": "bitchat",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release bitchat"
+        }
+    ]
+}

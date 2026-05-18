@@ -46,9 +46,9 @@ struct BitchatApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(chatViewModel)
+            FlutterView()
                 .onAppear {
+                    // Set up background services (Tor, Nostr, BLE mesh)
                     NotificationDelegate.shared.chatViewModel = chatViewModel
                     // Inject live Noise service into VerificationService to avoid creating new BLE instances
                     VerificationService.shared.configure(with: chatViewModel.meshService.getNoiseService())

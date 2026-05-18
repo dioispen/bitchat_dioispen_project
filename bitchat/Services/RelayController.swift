@@ -17,6 +17,7 @@ struct RelayController {
                        isDirectedFragment: Bool,
                        isHandshake: Bool,
                        isAnnounce: Bool,
+                       isEmergency: Bool = false,
                        degree: Int,
                        highDegreeThreshold: Int) -> RelayDecision {
         let ttlCap = min(ttl, TransportConfig.messageTTLDefault)
@@ -24,6 +25,15 @@ struct RelayController {
         // Suppress obvious non-relays
         if ttlCap <= 1 || senderIsSelf {
             return RelayDecision(shouldRelay: false, newTTL: ttlCap, delayMs: 0)
+        }
+
+        // EMERGENCY messages: always relay with minimal delay, full TTL decrement
+        // These are critical mesh-wide broadcasts that bypass normal flood control
+        if isEmergency {
+            let newTTL = ttlCap &- 1
+            // Minimal delay for emergency propagation
+            let delayMs = Int.random(in: 5...15)
+            return RelayDecision(shouldRelay: true, newTTL: newTTL, delayMs: delayMs)
         }
 
         // For session-critical or directed traffic, be deterministic and reliable

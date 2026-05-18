@@ -3807,6 +3807,7 @@ extension BLEService {
         // Relay decision and scheduling (extracted via RelayController)
         do {
             let degree = collectionsQueue.sync { peers.values.filter { $0.isConnected }.count }
+            let isEmergency = packet.type == MessageType.emergencyMessage.rawValue
             let decision = RelayController.decide(
                 ttl: packet.ttl,
                 senderIsSelf: senderID == myPeerID,
@@ -3816,6 +3817,7 @@ extension BLEService {
                 isDirectedFragment: packet.type == MessageType.fragment.rawValue && packet.recipientID != nil,
                 isHandshake: packet.type == MessageType.noiseHandshake.rawValue,
                 isAnnounce: packet.type == MessageType.announce.rawValue,
+                isEmergency: isEmergency,
                 degree: degree,
                 highDegreeThreshold: highDegreeThreshold
             )
