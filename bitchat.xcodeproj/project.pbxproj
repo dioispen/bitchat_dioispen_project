@@ -83,7 +83,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				LaunchScreen.storyboard,
 			);
 			target = 0576A29205865664C0937536 /* bitchat_macOS */;
 		};
