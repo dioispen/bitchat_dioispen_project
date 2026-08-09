@@ -5,8 +5,9 @@
 # Output: Frameworks/arti.xcframework containing static libraries for:
 #   - aarch64-apple-ios (iOS device)
 #   - aarch64-apple-ios-sim (iOS simulator, Apple Silicon)
-#   - x86_64-apple-ios (iOS simulator, Intel - optional)
-#   - aarch64-apple-darwin (macOS)
+#   - x86_64-apple-ios (iOS simulator, Intel)
+#   - aarch64-apple-darwin (macOS, Apple Silicon)
+#   - x86_64-apple-darwin (macOS, Intel)
 #
 set -e
 
@@ -19,11 +20,15 @@ LIB_NAME="libarti_bitchat.a"
 FRAMEWORK_NAME="arti"
 OUTPUT_DIR="$SCRIPT_DIR/Frameworks"
 
-# Targets to build
+# Targets to build. Include both arm64 and x86_64 slices so the XCFramework
+# can be consumed by Apple Silicon and Intel macOS hosts and by the simulator
+# on both architectures.
 TARGETS=(
     "aarch64-apple-ios"           # iOS device
     "aarch64-apple-ios-sim"       # iOS simulator (Apple Silicon)
-    "aarch64-apple-darwin"        # macOS
+    "x86_64-apple-ios"             # iOS simulator (Intel)
+    "aarch64-apple-darwin"        # macOS (Apple Silicon)
+    "x86_64-apple-darwin"          # macOS (Intel)
 )
 
 # Colors for output

@@ -32,9 +32,6 @@ let package = Package(
             exclude: [
                 "Info.plist",
                 "Assets.xcassets",
-                "bitchat.entitlements",
-                "bitchat-macOS.entitlements",
-                "LaunchScreen.storyboard",
                 "ViewModels/Extensions/README.md"
             ],
             resources: [

@@ -890,7 +890,7 @@ struct ContentView: View {
                     .accessibilityLabel("Close")
                 }
                 let activeText = String.localizedStringWithFormat(
-                    String(localized: "%@ active", comment: "Count of active users in the people sheet"),
+                    String(localized: "content.people.active_count", comment: "Count of active users in the people sheet"),
                     "\(peopleSheetActiveCount)"
                 )
 

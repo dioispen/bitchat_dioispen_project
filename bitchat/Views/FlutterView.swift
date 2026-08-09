@@ -7,17 +7,30 @@
 //
 
 import SwiftUI
+#if canImport(Flutter)
 import Flutter
+#endif
 
 /// SwiftUI wrapper for Flutter module
-struct FlutterView: UIViewControllerRepresentable {
-    
-    func makeUIViewController(context: Context) -> UIViewController {
-        let flutterViewController = FlutterViewController(project: nil, nibName: nil, bundle: nil)
-        return flutterViewController
+struct FlutterView: View {
+    var body: some View {
+        #if canImport(Flutter)
+        FlutterHostedView()
+        #else
+        Color.clear
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        #endif
     }
-    
+}
+
+#if canImport(Flutter)
+struct FlutterHostedView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        FlutterViewController(project: nil, nibName: nil, bundle: nil)
+    }
+
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         // Update logic if needed
     }
 }
+#endif

@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Tor",  // Keep name "Tor" for drop-in compatibility
+    name: "Arti",
     platforms: [
         .iOS(.v16),
         .macOS(.v13),
@@ -11,6 +11,10 @@ let package = Package(
         .library(
             name: "Tor",
             targets: ["Tor"]
+        ),
+        .library(
+            name: "arti",
+            targets: ["arti"]
         ),
     ],
     dependencies: [
@@ -24,12 +28,16 @@ let package = Package(
                 "arti",
                 .product(name: "BitLogger", package: "BitLogger"),
             ],
-            path: "Sources",
-            exclude: ["C"],
+            path: ".",
+            exclude: ["Sources/C"],
             sources: [
-                "TorManager.swift",
-                "TorURLSession.swift",
-                "TorNotifications.swift",
+                "Sources/TorManager.swift",
+                "Sources/TorURLSession.swift",
+                "Sources/TorNotifications.swift",
+            ],
+            cSettings: [
+                .headerSearchPath("Sources/C/include"),
+                .headerSearchPath("Frameworks/include"),
             ],
             linkerSettings: [
                 .linkedLibrary("resolv"),

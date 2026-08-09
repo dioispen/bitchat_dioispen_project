@@ -936,18 +936,22 @@
 		};
 		A6E3E56F2E77036A0032EA8A /* BitLogger */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A6E3E56E2E77036A0032EA8A /* XCLocalSwiftPackageReference "localPackages/BitLogger" */;
 			productName = BitLogger;
 		};
 		A6E3E5712E7703760032EA8A /* BitLogger */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A6E3E56E2E77036A0032EA8A /* XCLocalSwiftPackageReference "localPackages/BitLogger" */;
 			productName = BitLogger;
 		};
 		A6E3EA7E2E7706720032EA8A /* Tor */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A6E3EA7D2E7706720032EA8A /* XCLocalSwiftPackageReference "localPackages/Arti" */;
 			productName = Tor;
 		};
 		A6E3EA802E7706A80032EA8A /* Tor */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = A6E3EA7D2E7706720032EA8A /* XCLocalSwiftPackageReference "localPackages/Arti" */;
 			productName = Tor;
 		};
 		B1D9136AA0083366353BFA2F /* P256K */ = {

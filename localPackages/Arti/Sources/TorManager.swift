@@ -1,5 +1,9 @@
 import BitLogger
+import Combine
 import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 #if canImport(Network)
 import Network
 #endif
