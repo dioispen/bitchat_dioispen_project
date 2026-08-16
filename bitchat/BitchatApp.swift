@@ -220,6 +220,9 @@ import AppKit
 
 final class MacAppDelegate: NSObject, NSApplicationDelegate {
     weak var chatViewModel: ChatViewModel?
+    #if canImport(Flutter)
+    var flutterEngine: FlutterEngine?
+    #endif
     
     func applicationWillTerminate(_ notification: Notification) {
         chatViewModel?.applicationWillTerminate()
