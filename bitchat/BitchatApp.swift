@@ -9,6 +9,10 @@
 import Tor
 import SwiftUI
 import UserNotifications
+#if canImport(Flutter)
+import Flutter
+import FlutterPluginRegistrant
+#endif
 
 @main
 struct BitchatApp: App {
@@ -188,11 +192,23 @@ struct BitchatApp: App {
 #if os(iOS)
 final class AppDelegate: NSObject, UIApplicationDelegate {
     weak var chatViewModel: ChatViewModel?
-    
+
+    #if canImport(Flutter)
+    var flutterEngine: FlutterEngine?
+    #endif
+
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        #if canImport(Flutter)
+        if flutterEngine == nil {
+            let engine = FlutterEngine(name: "bitchat_flutter_engine")
+            engine.run()
+            GeneratedPluginRegistrant.register(with: engine)
+            flutterEngine = engine
+        }
+        #endif
         return true
     }
-    
+
     func applicationWillTerminate(_ application: UIApplication) {
         chatViewModel?.applicationWillTerminate()
     }

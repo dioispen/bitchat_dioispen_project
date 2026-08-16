@@ -26,7 +26,22 @@ struct FlutterView: View {
 #if canImport(Flutter)
 struct FlutterHostedView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        FlutterViewController(project: nil, nibName: nil, bundle: nil)
+        #if canImport(Flutter)
+        if let appDelegate = UIApplication.shared.delegate as? AppDelegate,
+           let engine = appDelegate.flutterEngine {
+            return FlutterViewController(engine: engine, nibName: nil, bundle: nil)
+        }
+
+        let engine = FlutterEngine(name: "bitchat_flutter_engine")
+        engine.run()
+        GeneratedPluginRegistrant.register(with: engine)
+        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+            appDelegate.flutterEngine = engine
+        }
+        return FlutterViewController(engine: engine, nibName: nil, bundle: nil)
+        #else
+        return UIViewController()
+        #endif
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
